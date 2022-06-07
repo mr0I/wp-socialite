@@ -17,8 +17,8 @@
     <form method="post" action="options.php">
         <?php
         if ( $_GET['tab'] == 'first_tab' ) {
-            settings_fields("mainPage_settings_options");
-            do_settings_sections("mainPage_settings");
+            settings_fields("general_settings_options");
+            do_settings_sections("general_settings");
         } elseif ($_GET['tab'] == 'second_tab') {
          //
         }
