@@ -3,7 +3,7 @@
 
 add_action('admin_init',function (){
     add_settings_section('general_settings_options', __('Provider Info', 'socialite_lan'), null, 'general_settings');
-    add_settings_field('setting_github_label', __('Github Settings', 'socialite_lan'), 'setting_github_label_callback'
+    add_settings_field('setting_github_label', __('Github', 'socialite_lan'), 'setting_github_label_callback'
         , 'general_settings', 'general_settings_options');
     add_settings_field('setting_github_client_id', __('Github Client Id', 'socialite_lan'), 'setting_github_client_id_callback'
         , 'general_settings', 'general_settings_options');

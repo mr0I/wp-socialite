@@ -27,22 +27,21 @@ define('SOC_JS', plugin_dir_url(__FILE__) . 'front/js/');
 
 // load css&js
 add_action( 'wp_enqueue_scripts', function(){
-    wp_enqueue_script('soc-scripts', SOC_JS.'scripts.js' , '1.1');
+    wp_enqueue_script('soc-scripts', SOC_JS.'scripts.js' , '1.1',array('jquery'));
     wp_localize_script( 'soc-scripts', 'SOCAjax', array(
         'ajaxurl' => admin_url( 'admin-ajax.php' ),
         'security' => wp_create_nonce( 'vovJ0hYrMya1ywMG' ),
         'REQUEST_TIMEOUT' => 10000,
     ));
 //    wp_enqueue_media();
-    wp_enqueue_style( 'soc-styles', SOC_CSS . 'styles.css','1.1');
+    //wp_enqueue_style( 'soc-styles', SOC_CSS . 'styles.css','1.1');
 });
 
-include(plugin_dir_path(__FILE__). 'base_functions.php' );
+
+include(ROOT_DIR. 'base_functions.php' );
+include(SOC_INCS. 'shortcode.php' );
 register_activation_hook( __FILE__, 'SOC_activate_function');
 register_deactivation_hook( __FILE__, 'SOC_deactivate_function');
-
-
-
 if(is_admin()){
     include(SOC_ADMIN . 'admin_proccess.php'); // used include instead of require to not produce errors
     include(SOC_ADMIN . 'ajax_requests.php');
