@@ -2,6 +2,7 @@ jQuery(document).ready(function ($) {
 
 
     $('#redirect_to_github').on('click',function () {
+        //const oauthWindow = window.open();
         location.assign('https://github.com/login/oauth/authorize?client_id=e03b8f55700cf59a7e79&allow_signup=false&scope=user:email');
     });
 
