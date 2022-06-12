@@ -1,5 +1,5 @@
 <?php defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
-
+require_once SOC_INCS . 'functions.php';
 
 
 function githubOauth_callback(){
@@ -69,33 +69,27 @@ function githubOauth_callback(){
                     "SELECT * FROM $users_table WHERE `user_login`='$userName'");
 
                 if ($find_userId){
-//                    $result = array(
-//                        'success' => true,
-//                        'res' => 2,
-//                    );
-//                    wp_send_json($result);
-//                    exit();
-
                     $user = get_user_by_id($find_userId);
-                    //login
-                } elseif ($duplicateEntry){
-//                    $result = array(
-//                        'success' => true,
-//                        'res' => 3,
-//                    );
-//                    wp_send_json($result);
-//                    exit();
-                    $user = $duplicateEntry;
-                    //login
-                } else {
-//                    $result = array(
-//                        'success' => true,
-//                        'res' => 4,
-//                    );
-//                    wp_send_json($result);
-//                    exit();
 
-                    $password = random_password();
+                    $login = loginUser($user->user_login,$user->password);
+                    if ($login){
+                        $response_msg = ["user" => $user->user_login, "msg" => "successfully logged in (:", "status" => 1];
+
+//                        wp_set_current_user( $userId, $userName );
+//                        wp_set_auth_cookie( $userId );
+                        wp_safe_redirect(site_url());
+                    }
+                } elseif ($duplicateEntry){
+                    $user = $duplicateEntry;
+
+                    $login = loginUser($user->user_login,$user->password);
+                    if ($login){
+                        wp_set_current_user( $userId, $userName );
+                        wp_set_auth_cookie( $userId );
+                        wp_safe_redirect(site_url());
+                    }
+                } else {
+                    $password = wp_generate_password(8,false);
                     $userMail = $response->email;
                     $userNickName = $response->name;
 
@@ -107,54 +101,50 @@ function githubOauth_callback(){
                         "display_name" => $userName,
                         "role" => 'customer'
                     ];
-                    $res = wp_insert_user($userData);
+                    try{
+                        $res = wp_insert_user($userData);
 
-                    if ($res) {
-                        $credientals = array(
-                            'user_login'     => sanitize_user($userName),
-                            'user_password'  => esc_attr($password)
-                        );
+                        if ($res) {
+                            $login = loginUser($userName,$password);
 
-                        $login = wp_signon( $credientals, false );
-                        if ($login){
-                            $insertArray = [];
-                            array_push($insertArray,[
-                                'user_id' => absint($userId),
-                                'meta_key' => 'git_user',
-                                'meta_value' => true
-                            ]);
+                            if ($login){
+                                $insertArray = [];
+                                array_push($insertArray,[
+                                    'user_id' => $res,
+                                    'meta_key' => 'git_user',
+                                    'meta_value' => absint($userId)
+                                ]);
 
-                            foreach ($insertArray as $array){
-                                $wpdb->insert( $user_meta_table , array(
-                                    'user_id' => $array['user_id'],
-                                    'meta_key' => $array['meta_key'],
-                                    'meta_value' => $array['meta_value']
-                                ), array( '%d','%s', '%s' ));
+                                foreach ($insertArray as $array){
+                                    $wpdb->insert( $user_meta_table , array(
+                                        'user_id' => $array['user_id'],
+                                        'meta_key' => $array['meta_key'],
+                                        'meta_value' => $array['meta_value']
+                                    ), array( '%d','%s', '%s' ));
+                                }
+
+                                wp_set_current_user( $userId, $userName );
+                                wp_set_auth_cookie( $userId );
+                                wp_safe_redirect(site_url());
                             }
-
-                            wp_set_current_user( $userId, $userName );
-                            wp_set_auth_cookie( $userId );
-
-
-//                            setcookie("auth" , json_encode($response_msg));
-                            //header("Location: http://localhost/wordpress");
                         }
+                    }catch (\Exception $e){
+                        echo $e->getMessage();
                     }
                 }
-
-
-
-
             }
         }
+    } else {
+        $result = array(
+            'success' => false
+        );
+        wp_send_json($result);
+        exit();
     }
 
-
-    $result = array(
-        'success' => false
-    );
-    wp_send_json($result);
+    echo json_encode($response_msg);
     exit();
+
 }
 add_action( 'wp_ajax_githubOauth', 'githubOauth_callback' );
 add_action( 'wp_ajax_nopriv_githubOauth', 'githubOauth_callback' );
