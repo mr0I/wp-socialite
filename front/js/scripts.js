@@ -2,8 +2,11 @@ jQuery(document).ready(function ($) {
 
 
     $('#redirect_to_github').on('click',function () {
-        //const oauthWindow = window.open();
-        location.assign('https://github.com/login/oauth/authorize?client_id=e03b8f55700cf59a7e79&allow_signup=false&scope=user:email');
+        const left = (screen.width - 550) /2;
+        const top = (screen.height - 550) /2;
+        const url = 'https://github.com/login/oauth/authorize?client_id=e03b8f55700cf59a7e79&allow_signup=false&scope=user:email';
+
+        window.open(url,`location=yes,height=400,width=400,left=${left},top=${top},scrollbars=yes,status=yes`);
     });
 
     // $('#github_oauth').on('click',function () {

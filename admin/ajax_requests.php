@@ -3,8 +3,6 @@ require_once SOC_INCS . 'functions.php';
 
 
 function githubOauth_callback(){
-    //check_ajax_referer( 'vovJ0hYrMya1ywMG', 'security' );
-
     $github_code =  ($_GET['code']) ? $_GET['code'] : false;
 
     if ($github_code){
@@ -45,49 +43,25 @@ function githubOauth_callback(){
             $response = json_decode($response['body']);
 
 
-//            $result = array(
-//                'success' => true,
-//                'res' => $response,
-//                'res2' => $response2,
-//            );
-//            wp_send_json($result);
-//            exit();
-
-
-
             if (!empty($response->login) && !empty($response->node_id )) {
-                $userId = $response->id;
-                $userName = $response->login;
-
                 global $wpdb;
                 $user_meta_table = $wpdb->prefix . 'usermeta';
                 $users_table = $wpdb->prefix . 'users';
 
+                $userId = $response->id;
+                $userName = $response->login;
+
                 $find_userId = $wpdb->get_results(
-                    "SELECT user_id FROM $user_meta_table WHERE `user_id`='$userId' AND `meta_key`='git_user'");
+                    "SELECT * FROM $user_meta_table WHERE `meta_key`='git_user'AND `meta_value`='$userId'");
                 $duplicateEntry = $wpdb->get_results(
                     "SELECT * FROM $users_table WHERE `user_login`='$userName'");
 
                 if ($find_userId){
-                    $user = get_user_by_id($find_userId);
-
-                    $login = loginUser($user->user_login,$user->password);
-                    if ($login){
-                        $response_msg = ["user" => $user->user_login, "msg" => "successfully logged in (:", "status" => 1];
-
-//                        wp_set_current_user( $userId, $userName );
-//                        wp_set_auth_cookie( $userId );
-                        wp_safe_redirect(site_url());
-                    }
+                    $userID = intval($find_userId[0]->user_id);
+                    wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&s=' . $userID);
                 } elseif ($duplicateEntry){
                     $user = $duplicateEntry;
-
-                    $login = loginUser($user->user_login,$user->password);
-                    if ($login){
-                        wp_set_current_user( $userId, $userName );
-                        wp_set_auth_cookie( $userId );
-                        wp_safe_redirect(site_url());
-                    }
+                    wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&s=' . $user[0]->ID);
                 } else {
                     $password = wp_generate_password(8,false);
                     $userMail = $response->email;
@@ -99,7 +73,7 @@ function githubOauth_callback(){
                         "user_email" => $userMail,
                         "user_nicename" => $userNickName,
                         "display_name" => $userName,
-                        "role" => 'customer'
+                        "role" => 'subscriber'
                     ];
                     try{
                         $res = wp_insert_user($userData);
@@ -123,9 +97,7 @@ function githubOauth_callback(){
                                     ), array( '%d','%s', '%s' ));
                                 }
 
-                                wp_set_current_user( $userId, $userName );
-                                wp_set_auth_cookie( $userId );
-                                wp_safe_redirect(site_url());
+                                wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&s=' . $res);
                             }
                         }
                     }catch (\Exception $e){
@@ -142,9 +114,8 @@ function githubOauth_callback(){
         exit();
     }
 
-    echo json_encode($response_msg);
+    echo json_encode(false);
     exit();
-
 }
 add_action( 'wp_ajax_githubOauth', 'githubOauth_callback' );
 add_action( 'wp_ajax_nopriv_githubOauth', 'githubOauth_callback' );

