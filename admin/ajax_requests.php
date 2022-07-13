@@ -58,10 +58,10 @@ function githubOauth_callback(){
 
                 if ($find_userId){
                     $userID = intval($find_userId[0]->user_id);
-                    wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&s=' . $userID);
+                    wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&uid=' . $userID);
                 } elseif ($duplicateEntry){
                     $user = $duplicateEntry;
-                    wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&s=' . $user[0]->ID);
+                    wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&uid=' . $user[0]->ID);
                 } else {
                     $password = wp_generate_password(8,false);
                     $userMail = $response->email;
@@ -97,7 +97,7 @@ function githubOauth_callback(){
                                     ), array( '%d','%s', '%s' ));
                                 }
 
-                                wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&s=' . $res);
+                                wp_safe_redirect(site_url(). '/auto_auth?pagename=auto_auth&uid=' . $res);
                             }
                         }
                     }catch (\Exception $e){
